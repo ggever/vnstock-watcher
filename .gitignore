@@ -1,0 +1,10 @@
+.venv/
+dist/
+build/
+__pycache__/
+*.spec
+*.pyc
+config.json
+history.csv
+history.csv.bak
+history.db

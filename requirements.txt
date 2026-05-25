@@ -1,0 +1,9 @@
+vnstock
+pandas
+winotify
+pystray
+Pillow
+requests
+packaging
+pytz
+pywin32
