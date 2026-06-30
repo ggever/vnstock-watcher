@@ -59,3 +59,26 @@ def test_set_telegram_chat_id(db, monkeypatch):
     user = repo.get_or_create_user("a@x.com", "A")
     repo.set_telegram_chat_id(user["id"], "12345")
     assert repo.get_user(user["id"])["telegram_chat_id"] == "12345"
+
+
+def test_symbol_crud_and_watch_specs(db, monkeypatch):
+    monkeypatch.setattr(config, "ALLOWED_EMAILS", {"a@x.com", "b@x.com"})
+    monkeypatch.setattr(config, "ADMIN_EMAILS", set())
+    a = repo.get_or_create_user("a@x.com", "A")
+    b = repo.get_or_create_user("b@x.com", "B")
+    repo.upsert_symbol(a["id"], "vnm", 3000, "Mua")
+    repo.upsert_symbol(a["id"], "vnm", 5000, "Cả hai")  # update same row
+    repo.upsert_symbol(b["id"], "VNM", 1000, "Bán")
+    repo.upsert_symbol(a["id"], "FPT", 2000, "Cả hai")
+
+    rows = repo.list_symbols(a["id"])
+    assert {r["symbol"] for r in rows} == {"VNM", "FPT"}
+    vnm = next(r for r in rows if r["symbol"] == "VNM")
+    assert vnm["threshold"] == 5000 and vnm["side"] == "Cả hai"
+
+    specs = repo.watch_specs()
+    assert set(specs.keys()) == {"VNM", "FPT"}
+    assert len(specs["VNM"]) == 2  # both users watch VNM
+
+    repo.delete_symbol(a["id"], "FPT")
+    assert "FPT" not in repo.watch_specs()

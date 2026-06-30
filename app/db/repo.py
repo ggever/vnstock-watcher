@@ -8,6 +8,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 from app import config
+from app.core.symbol_config import clean_symbol, normalize_side
 
 
 def _dsn() -> str:
@@ -120,3 +121,50 @@ def add_allowed_email(email: str) -> None:
 def remove_allowed_email(email: str) -> None:
     with connect() as conn:
         conn.execute("DELETE FROM allowed_emails WHERE email = %s", ((email or "").strip().lower(),))
+
+
+def list_symbols(user_id: int) -> list[dict]:
+    with connect() as conn:
+        return conn.execute(
+            "SELECT symbol, threshold, side FROM symbols WHERE user_id = %s ORDER BY symbol",
+            (user_id,),
+        ).fetchall()
+
+
+def upsert_symbol(user_id: int, symbol: str, threshold: int, side: str) -> None:
+    symbol = clean_symbol(symbol)
+    threshold = int(threshold)
+    side = normalize_side(side)
+    if not symbol or threshold <= 0:
+        return
+    with connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO symbols (user_id, symbol, threshold, side)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (user_id, symbol)
+            DO UPDATE SET threshold = EXCLUDED.threshold, side = EXCLUDED.side
+            """,
+            (user_id, symbol, threshold, side),
+        )
+
+
+def delete_symbol(user_id: int, symbol: str) -> None:
+    with connect() as conn:
+        conn.execute(
+            "DELETE FROM symbols WHERE user_id = %s AND symbol = %s",
+            (user_id, clean_symbol(symbol)),
+        )
+
+
+def watch_specs() -> dict[str, list[dict]]:
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT user_id, symbol, threshold, side FROM symbols"
+        ).fetchall()
+    specs: dict[str, list[dict]] = {}
+    for r in rows:
+        specs.setdefault(r["symbol"], []).append(
+            {"user_id": r["user_id"], "threshold": r["threshold"], "side": r["side"]}
+        )
+    return specs
