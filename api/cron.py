@@ -20,30 +20,36 @@ def run_cron():
 
     notifier = TelegramNotifier(config.TELEGRAM_BOT_TOKEN)
 
+    fetched_max: dict = {}
+
     def fetch_fn(symbol, page_size):
         df = ticks.fetch_intraday(symbol, page_size)
-        # inject last_seen từ DB thay vì in-memory
         last_seen = repo.get_poller_last_seen(symbol)
         if last_seen is not None and not df.empty:
             df = df[df["_sort_time"] > last_seen]
+        if not df.empty:
+            fetched_max[symbol] = df["_sort_time"].max()
         return df
 
     def append_fn(user_id, symbol, rows):
-        count = repo.append_rows(user_id, symbol, rows)
-        # cập nhật last_seen vào DB
-        if not rows.empty:
-            repo.set_poller_last_seen(symbol, rows["_sort_time"].max())
-        return count
+        return repo.append_rows(user_id, symbol, rows)
 
     def chat_id_fn(user_id):
         user = repo.get_user(user_id)
         return user["telegram_chat_id"] if user else None
 
     poller = Poller(notifier, fetch_fn, append_fn, chat_id_fn)
+    # Pre-seed _first_poll so the baseline phase is skipped; fetch_fn already
+    # filters by DB last_seen, so all returned rows are genuinely new.
+    for symbol in specs:
+        poller._first_poll.add(symbol)
+
     now = now_vn().replace(tzinfo=None)
     for symbol, symbol_specs in specs.items():
         page_size = ticks.page_size_for_interval(60)
         poller.process_symbol(symbol, symbol_specs, page_size, now)
+        if symbol in fetched_max:
+            repo.set_poller_last_seen(symbol, fetched_max[symbol])
 
     return JSONResponse({"ok": True, "symbols": list(specs.keys())})
 
