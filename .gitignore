@@ -8,3 +8,5 @@ config.json
 history.csv
 history.csv.bak
 history.db
+.env
+.env copy

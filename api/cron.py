@@ -8,9 +8,9 @@ from app import config
 from app.notify.telegram import TelegramNotifier
 from app.worker.poller import Poller
 
-cron_app = FastAPI()
+app = FastAPI()
 
-@cron_app.get("/api/cron")
+@app.get("/api/cron")
 def run_cron(request: Request):
     if config.CRON_SECRET and request.headers.get("Authorization") != f"Bearer {config.CRON_SECRET}":
         return JSONResponse({"error": "unauthorized"}, status_code=401)
@@ -58,4 +58,4 @@ def run_cron(request: Request):
 
     return JSONResponse({"ok": True, "symbols": list(specs.keys())})
 
-handler = Mangum(cron_app)
+handler = Mangum(app)
