@@ -1,4 +1,3 @@
-from datetime import datetime
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from mangum import Mangum
