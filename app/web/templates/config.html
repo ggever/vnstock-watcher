@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Cấu hình mã</h1>
+<form method="post" action="/symbols">
+  <input name="symbol" placeholder="Mã (VD: VNM)" required>
+  <input name="threshold" type="number" min="1" placeholder="Ngưỡng KL" required>
+  <select name="side">
+    <option>Cả hai</option><option>Mua</option><option>Bán</option>
+  </select>
+  <button type="submit">Thêm/Sửa</button>
+</form>
+<table>
+  <thead><tr><th>Mã</th><th>Ngưỡng</th><th>Chiều</th><th></th></tr></thead>
+  <tbody>
+  {% for s in symbols %}
+    <tr>
+      <td>{{ s.symbol }}</td><td>{{ s.threshold }}</td><td>{{ s.side }}</td>
+      <td><form method="post" action="/symbols/delete" style="display:inline">
+        <input type="hidden" name="symbol" value="{{ s.symbol }}">
+        <button type="submit">Xóa</button></form></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Telegram</h2>
+<p>Cách lấy chat ID: mở Telegram, chat với <b>@userinfobot</b> để lấy số <code>Id</code>.
+   Sau đó <b>bấm Start với bot của hệ thống một lần</b> để bot được phép nhắn tin cho bạn.</p>
+<form method="post" action="/telegram">
+  <input name="chat_id" value="{{ user.telegram_chat_id or '' }}" placeholder="Telegram chat ID">
+  <button type="submit">Lưu</button>
+</form>
+{% endblock %}

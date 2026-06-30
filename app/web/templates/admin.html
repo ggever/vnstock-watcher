@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Quản trị</h1>
+<h2>Chu kỳ poll (giây)</h2>
+<form method="post" action="/admin/interval">
+  <input name="interval" type="number" min="3" value="{{ interval }}">
+  <button type="submit">Lưu</button>
+</form>
+<h2>Whitelist email</h2>
+<form method="post" action="/admin/email">
+  <input name="email" type="email" placeholder="email@gmail.com" required>
+  <button type="submit">Thêm</button>
+</form>
+<ul>
+  {% for e in allowed %}
+  <li>{{ e }}
+    <form method="post" action="/admin/email/delete" style="display:inline">
+      <input type="hidden" name="email" value="{{ e }}"><button type="submit">Xóa</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

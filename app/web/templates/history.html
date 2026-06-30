@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Lịch sử lệnh lớn</h1>
+<form method="get" action="/history">
+  <select name="symbol">
+    <option value="ALL">ALL</option>
+    {% for s in symbols %}<option value="{{ s }}" {% if s == symbol %}selected{% endif %}>{{ s }}</option>{% endfor %}
+  </select>
+  <input name="date" value="{{ date }}" placeholder="YYYY-MM-DD">
+  <button type="submit">Lọc</button>
+</form>
+<form method="post" action="/history/clear" onsubmit="return confirm('Xóa toàn bộ lịch sử của bạn?')">
+  <button type="submit">Xóa lịch sử</button>
+</form>
+<table>
+  <thead><tr><th>Thời gian</th><th>Mã</th><th>Chiều</th><th>KL</th><th>Giá</th><th>Giá trị</th></tr></thead>
+  <tbody hx-get="/history/rows?symbol={{ symbol }}&date={{ date }}"
+         hx-trigger="every 10s" hx-swap="innerHTML">
+    {% include "_history_rows.html" %}
+  </tbody>
+</table>
+{% endblock %}

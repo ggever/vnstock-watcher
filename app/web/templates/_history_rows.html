@@ -1,0 +1,7 @@
+{% for r in rows %}
+<tr class="{{ 'buy' if r.side == 'Mua' else 'sell' }}">
+  <td>{{ r.time }}</td><td>{{ r.symbol }}</td><td>{{ r.side }}</td>
+  <td>{{ '{:,}'.format(r.volume) }}</td><td>{{ r.price }}</td>
+  <td>{{ '{:,.0f}'.format(r.value) }}</td>
+</tr>
+{% endfor %}

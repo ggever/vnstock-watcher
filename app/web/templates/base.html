@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VNStock Watcher</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/htmx.min.js"></script>
+</head>
+<body>
+  <nav>
+    <a href="/">Cấu hình</a> · <a href="/history">Lịch sử</a>
+    {% if user and user.is_admin %} · <a href="/admin">Admin</a>{% endif %}
+    {% if user %}
+      <form method="post" action="/logout" style="display:inline">
+        <button type="submit">Đăng xuất ({{ user.email }})</button>
+      </form>
+    {% endif %}
+  </nav>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>
