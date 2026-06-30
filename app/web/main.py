@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from app import config
 from app.db import repo
+from app.notify.telegram import TelegramNotifier
 from app.web import auth
 from app.web.deps import RedirectToLogin, require_admin, require_user, redirect_login
 
@@ -58,6 +59,19 @@ def save_telegram(request: Request, chat_id: str = Form("")):
     user = require_user(request)
     repo.set_telegram_chat_id(user["id"], chat_id)
     return RedirectResponse(url="/", status_code=303)
+
+
+@app.post("/telegram/test")
+def test_telegram(request: Request):
+    user = require_user(request)
+    chat_id = user.get("telegram_chat_id") or ""
+    if not chat_id:
+        return JSONResponse({"ok": False, "error": "Chưa lưu Chat ID."}, status_code=400)
+    tg = TelegramNotifier(token=config.TELEGRAM_BOT_TOKEN)
+    ok = tg.notify(chat_id, "✅ VNStock Watcher: kết nối Telegram thành công!")
+    if ok:
+        return JSONResponse({"ok": True})
+    return JSONResponse({"ok": False, "error": "Gửi thất bại. Kiểm tra bot token và chat ID."}, status_code=502)
 
 
 @app.get("/history")

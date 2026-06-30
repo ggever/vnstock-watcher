@@ -1,22 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Lịch sử lệnh lớn</h1>
-<form method="get" action="/history">
-  <select name="symbol">
-    <option value="ALL">ALL</option>
-    {% for s in symbols %}<option value="{{ s }}" {% if s == symbol %}selected{% endif %}>{{ s }}</option>{% endfor %}
-  </select>
-  <input name="date" value="{{ date }}" placeholder="YYYY-MM-DD">
-  <button type="submit">Lọc</button>
-</form>
-<form method="post" action="/history/clear" onsubmit="return confirm('Xóa toàn bộ lịch sử của bạn?')">
-  <button type="submit">Xóa lịch sử</button>
-</form>
-<table>
-  <thead><tr><th>Thời gian</th><th>Mã</th><th>Chiều</th><th>KL</th><th>Giá</th><th>Giá trị</th></tr></thead>
-  <tbody hx-get="/history/rows?symbol={{ symbol }}&date={{ date }}"
-         hx-trigger="every 10s" hx-swap="innerHTML">
-    {% include "_history_rows.html" %}
-  </tbody>
-</table>
+<div class="space-y-4">
+
+  <!-- Filter bar -->
+  <div class="bg-slate-800 rounded-xl p-4 shadow-lg flex items-center gap-3 flex-wrap">
+    <form method="get" action="/history" class="flex items-center gap-2 flex-1 flex-wrap">
+      <select name="symbol" class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        <option value="ALL">Tất cả mã</option>
+        {% for s in symbols %}<option value="{{ s }}" {% if s == symbol %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+      <input name="date" value="{{ date }}" placeholder="YYYY-MM-DD"
+             class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-40">
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">Lọc</button>
+    </form>
+    <form method="post" action="/history/clear" onsubmit="return confirm('Xóa toàn bộ lịch sử của bạn?')">
+      <button type="submit" class="text-slate-500 hover:text-red-400 text-sm transition-colors px-2 py-2">Xóa lịch sử</button>
+    </form>
+  </div>
+
+  <!-- History table -->
+  <div class="bg-slate-800 rounded-xl shadow-lg overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-700">
+            <th class="text-left px-4 py-3 text-slate-400 text-xs uppercase tracking-wider">Thời gian</th>
+            <th class="text-left px-4 py-3 text-slate-400 text-xs uppercase tracking-wider">Mã</th>
+            <th class="text-left px-4 py-3 text-slate-400 text-xs uppercase tracking-wider">Chiều</th>
+            <th class="text-right px-4 py-3 text-slate-400 text-xs uppercase tracking-wider">KL</th>
+            <th class="text-right px-4 py-3 text-slate-400 text-xs uppercase tracking-wider">Giá</th>
+            <th class="text-right px-4 py-3 text-slate-400 text-xs uppercase tracking-wider">Giá trị</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-700"
+               hx-get="/history/rows?symbol={{ symbol }}&date={{ date }}"
+               hx-trigger="every 10s" hx-swap="innerHTML">
+          {% include "_history_rows.html" %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
 {% endblock %}

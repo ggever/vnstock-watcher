@@ -1,33 +1,106 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Cấu hình mã</h1>
-<form method="post" action="/symbols">
-  <input name="symbol" placeholder="Mã (VD: VNM)" required>
-  <input name="threshold" type="number" min="1" placeholder="Ngưỡng KL" required>
-  <select name="side">
-    <option>Cả hai</option><option>Mua</option><option>Bán</option>
-  </select>
-  <button type="submit">Thêm/Sửa</button>
-</form>
-<table>
-  <thead><tr><th>Mã</th><th>Ngưỡng</th><th>Chiều</th><th></th></tr></thead>
-  <tbody>
-  {% for s in symbols %}
-    <tr>
-      <td>{{ s.symbol }}</td><td>{{ s.threshold }}</td><td>{{ s.side }}</td>
-      <td><form method="post" action="/symbols/delete" style="display:inline">
-        <input type="hidden" name="symbol" value="{{ s.symbol }}">
-        <button type="submit">Xóa</button></form></td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
+<div class="space-y-6">
 
-<h2>Telegram</h2>
-<p>Cách lấy chat ID: mở Telegram, chat với <b>@userinfobot</b> để lấy số <code>Id</code>.
-   Sau đó <b>bấm Start với bot của hệ thống một lần</b> để bot được phép nhắn tin cho bạn.</p>
-<form method="post" action="/telegram">
-  <input name="chat_id" value="{{ user.telegram_chat_id or '' }}" placeholder="Telegram chat ID">
-  <button type="submit">Lưu</button>
-</form>
+  <!-- Symbols card -->
+  <div class="bg-slate-800 rounded-xl p-6 shadow-lg">
+    <h2 class="text-lg font-semibold text-white mb-4">Theo dõi mã chứng khoán</h2>
+    <form method="post" action="/symbols" class="flex gap-2 mb-6 flex-wrap">
+      <input name="symbol" placeholder="Mã (VD: VNM)" required
+             class="flex-1 min-w-24 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
+      <input name="threshold" type="number" min="1" placeholder="Ngưỡng KL" required
+             class="w-36 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <select name="side"
+              class="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option>Cả hai</option><option>Mua</option><option>Bán</option>
+      </select>
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium transition-colors">Thêm</button>
+    </form>
+
+    {% if symbols %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-700">
+            <th class="text-left px-4 py-2.5 text-slate-400 text-xs uppercase tracking-wider rounded-tl-lg">Mã</th>
+            <th class="text-left px-4 py-2.5 text-slate-400 text-xs uppercase tracking-wider">Ngưỡng KL</th>
+            <th class="text-left px-4 py-2.5 text-slate-400 text-xs uppercase tracking-wider">Chiều</th>
+            <th class="px-4 py-2.5 rounded-tr-lg"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-700">
+          {% for s in symbols %}
+          <tr class="hover:bg-slate-700/50 transition-colors">
+            <td class="px-4 py-3 font-mono font-semibold text-blue-400">{{ s.symbol }}</td>
+            <td class="px-4 py-3 text-slate-300">{{ '{:,}'.format(s.threshold) }}</td>
+            <td class="px-4 py-3">
+              {% if s.side == 'Mua' %}
+                <span class="px-2 py-0.5 rounded text-xs font-medium bg-green-900/50 text-green-400">Mua</span>
+              {% elif s.side == 'Bán' %}
+                <span class="px-2 py-0.5 rounded text-xs font-medium bg-red-900/50 text-red-400">Bán</span>
+              {% else %}
+                <span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-700 text-slate-300">Cả hai</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-right">
+              <form method="post" action="/symbols/delete">
+                <input type="hidden" name="symbol" value="{{ s.symbol }}">
+                <button type="submit" class="text-slate-500 hover:text-red-400 transition-colors text-sm">Xóa</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-slate-500 text-sm text-center py-4">Chưa theo dõi mã nào. Thêm mã ở trên.</p>
+    {% endif %}
+  </div>
+
+  <!-- Telegram card -->
+  <div class="bg-slate-800 rounded-xl p-6 shadow-lg">
+    <h2 class="text-lg font-semibold text-white mb-1">Cấu hình Telegram</h2>
+    <p class="text-sm text-slate-400 mb-4">
+      Chat với <span class="font-mono text-slate-300">@userinfobot</span> để lấy Chat ID,
+      sau đó <span class="text-slate-300">bấm Start với bot hệ thống một lần</span> để bot được phép nhắn tin.
+    </p>
+    <div class="flex items-center gap-2 flex-wrap">
+      <form method="post" action="/telegram" class="flex gap-2 flex-1 min-w-0">
+        <input name="chat_id" value="{{ user.telegram_chat_id or '' }}" placeholder="Telegram chat ID"
+               class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium transition-colors">Lưu</button>
+      </form>
+      <button id="tg-test-btn" onclick="sendTgTest()"
+              class="bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg px-4 py-2 font-medium transition-colors border border-slate-600">Gửi thử</button>
+    </div>
+    <div id="tg-test-result" class="mt-2 text-sm"></div>
+  </div>
+
+</div>
+<script>
+async function sendTgTest() {
+  const btn = document.getElementById('tg-test-btn');
+  const result = document.getElementById('tg-test-result');
+  btn.disabled = true;
+  result.textContent = 'Đang gửi...';
+  result.className = 'mt-2 text-sm text-slate-400';
+  try {
+    const resp = await fetch('/telegram/test', {method: 'POST'});
+    const data = await resp.json();
+    if (data.ok) {
+      result.textContent = '✓ Gửi thành công!';
+      result.className = 'mt-2 text-sm text-green-400';
+    } else {
+      result.textContent = '✗ ' + data.error;
+      result.className = 'mt-2 text-sm text-red-400';
+    }
+  } catch(e) {
+    result.textContent = '✗ Lỗi kết nối.';
+    result.className = 'mt-2 text-sm text-red-400';
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
 {% endblock %}

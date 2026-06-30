@@ -3,19 +3,31 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>VNStock Watcher</title>
-  <link rel="stylesheet" href="/static/app.css">
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="/static/htmx.min.js"></script>
+  <link rel="stylesheet" href="/static/app.css">
 </head>
-<body>
-  <nav>
-    <a href="/">Cấu hình</a> · <a href="/history">Lịch sử</a>
-    {% if user and user.is_admin %} · <a href="/admin">Admin</a>{% endif %}
-    {% if user %}
-      <form method="post" action="/logout" style="display:inline">
-        <button type="submit">Đăng xuất ({{ user.email }})</button>
-      </form>
-    {% endif %}
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+  {% if user %}
+  <nav class="bg-slate-950 border-b border-slate-700">
+    <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-6">
+        <a href="/" class="font-bold text-white text-lg tracking-tight">VNStock Watcher</a>
+        <div class="flex items-center gap-1">
+          <a href="/" class="px-3 py-1.5 rounded-md text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Cấu hình</a>
+          <a href="/history" class="px-3 py-1.5 rounded-md text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Lịch sử</a>
+          {% if user.is_admin %}<a href="/admin" class="px-3 py-1.5 rounded-md text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Admin</a>{% endif %}
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-slate-400 hidden sm:block">{{ user.email }}</span>
+        <form method="post" action="/logout">
+          <button type="submit" class="text-sm text-slate-400 hover:text-white transition-colors px-3 py-1.5 rounded-md hover:bg-slate-800">Đăng xuất</button>
+        </form>
+      </div>
+    </div>
   </nav>
-  <main>{% block content %}{% endblock %}</main>
+  {% endif %}
+  <main class="max-w-4xl mx-auto px-4 py-8">{% block content %}{% endblock %}</main>
 </body>
 </html>

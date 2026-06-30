@@ -1,7 +1,16 @@
 {% for r in rows %}
-<tr class="{{ 'buy' if r.side == 'Mua' else 'sell' }}">
-  <td>{{ r.time }}</td><td>{{ r.symbol }}</td><td>{{ r.side }}</td>
-  <td>{{ '{:,}'.format(r.volume) }}</td><td>{{ r.price }}</td>
-  <td>{{ '{:,.0f}'.format(r.value) }}</td>
+<tr class="hover:bg-slate-700/50 transition-colors">
+  <td class="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">{{ r.time }}</td>
+  <td class="px-4 py-3 font-mono font-semibold text-blue-400">{{ r.symbol }}</td>
+  <td class="px-4 py-3">
+    {% if r.side == 'Mua' %}
+      <span class="px-2 py-0.5 rounded text-xs font-medium bg-green-900/50 text-green-400">Mua</span>
+    {% else %}
+      <span class="px-2 py-0.5 rounded text-xs font-medium bg-red-900/50 text-red-400">Bán</span>
+    {% endif %}
+  </td>
+  <td class="px-4 py-3 text-right text-slate-300 tabular-nums">{{ '{:,}'.format(r.volume) }}</td>
+  <td class="px-4 py-3 text-right text-slate-300 tabular-nums">{{ r.price }}</td>
+  <td class="px-4 py-3 text-right text-slate-300 tabular-nums">{{ '{:,.0f}'.format(r.value) }}</td>
 </tr>
 {% endfor %}
