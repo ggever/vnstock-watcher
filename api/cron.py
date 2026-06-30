@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from mangum import Mangum
 from app.db import repo
@@ -11,7 +11,9 @@ from app.worker.poller import Poller
 cron_app = FastAPI()
 
 @cron_app.get("/api/cron")
-def run_cron():
+def run_cron(request: Request):
+    if config.CRON_SECRET and request.headers.get("Authorization") != f"Bearer {config.CRON_SECRET}":
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     if not (config.IGNORE_MARKET_HOURS or is_trading_time()):
         return JSONResponse({"skipped": "market closed"})
     specs = repo.watch_specs()

@@ -22,3 +22,4 @@ ADMIN_EMAILS = csv_emails(os.environ.get("ADMIN_EMAILS", ""))
 
 DEFAULT_POLL_INTERVAL = max(3, int(os.environ.get("POLL_INTERVAL", "10") or "10"))
 IGNORE_MARKET_HOURS = os.environ.get("IGNORE_MARKET_HOURS", "") == "1"
+CRON_SECRET = os.environ.get("CRON_SECRET", "")
