@@ -1,0 +1,21 @@
+{
+  "builds": [
+    {"src": "api/index.py", "use": "@vercel/python"},
+    {"src": "api/cron.py",  "use": "@vercel/python"}
+  ],
+  "routes": [
+    {"src": "/api/cron", "dest": "api/cron.py"},
+    {"src": "/(.*)",     "dest": "api/index.py"}
+  ],
+  "crons": [{"path": "/api/cron", "schedule": "* * * * *"}],
+  "env": {
+    "DATABASE_URL":          "@database_url",
+    "TELEGRAM_BOT_TOKEN":    "@telegram_bot_token",
+    "SESSION_SECRET":        "@session_secret",
+    "GOOGLE_CLIENT_ID":      "@google_client_id",
+    "GOOGLE_CLIENT_SECRET":  "@google_client_secret",
+    "OAUTH_REDIRECT_URL":    "@oauth_redirect_url",
+    "ALLOWED_EMAILS":        "@allowed_emails",
+    "ADMIN_EMAILS":          "@admin_emails"
+  }
+}

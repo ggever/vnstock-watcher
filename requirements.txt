@@ -10,3 +10,4 @@ vnstock
 pandas
 pytz
 pytest==8.*
+mangum==0.17.*
