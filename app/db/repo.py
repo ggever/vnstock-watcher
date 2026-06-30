@@ -8,6 +8,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 from app import config
+from app.core.market_hours import now_vn
 from app.core.symbol_config import clean_symbol, normalize_side
 
 
@@ -168,3 +169,79 @@ def watch_specs() -> dict[str, list[dict]]:
             {"user_id": r["user_id"], "threshold": r["threshold"], "side": r["side"]}
         )
     return specs
+
+
+_HISTORY_KEYS = ["time", "symbol", "side", "volume", "price", "value"]
+
+
+def history_time(value) -> str:
+    if value is None:
+        return now_vn().replace(microsecond=0).isoformat()
+    text = str(value).strip()
+    if not text:
+        return now_vn().replace(microsecond=0).isoformat()
+    try:
+        return datetime.fromisoformat(text).replace(microsecond=0).isoformat()
+    except ValueError:
+        pass
+    if len(text) <= 8 and ":" in text:
+        return f"{now_vn().date().isoformat()}T{text}"
+    return text
+
+
+def append_rows(user_id: int, symbol: str, rows) -> int:
+    records = []
+    for _, row in rows.iterrows():
+        volume = int(row.get("volume", 0) or 0)
+        price = float(row.get("price", 0) or 0)
+        records.append((
+            user_id,
+            history_time(row.get("time")),
+            symbol.upper(),
+            str(row.get("match_type", "")),
+            volume,
+            price,
+            volume * price,
+        ))
+    if not records:
+        return 0
+    with connect() as conn:
+        conn.cursor().executemany(
+            """
+            INSERT INTO orders (user_id, time, symbol, side, volume, price, value)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            records,
+        )
+    return len(records)
+
+
+def load_history(user_id: int, symbol_filter=None, date_filter=None, limit: int = 500) -> list[dict]:
+    sql = "SELECT time, symbol, side, volume, price, value FROM orders WHERE user_id = %s"
+    params: list = [user_id]
+    symbol = (symbol_filter or "").strip().upper()
+    if symbol and symbol != "ALL":
+        sql += " AND symbol = %s"
+        params.append(symbol)
+    date_text = (date_filter or "").strip()
+    if date_text:
+        sql += " AND time >= %s"
+        params.append(date_text)
+    sql += " ORDER BY time DESC LIMIT %s"
+    params.append(max(1, int(limit)))
+    with connect() as conn:
+        return conn.execute(sql, params).fetchall()
+
+
+def clear_history(user_id: int) -> None:
+    with connect() as conn:
+        conn.execute("DELETE FROM orders WHERE user_id = %s", (user_id,))
+
+
+def distinct_symbols(user_id: int) -> list[str]:
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT DISTINCT symbol FROM orders WHERE user_id = %s ORDER BY symbol",
+            (user_id,),
+        ).fetchall()
+    return [r["symbol"] for r in rows]

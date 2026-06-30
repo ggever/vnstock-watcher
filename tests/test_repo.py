@@ -82,3 +82,31 @@ def test_symbol_crud_and_watch_specs(db, monkeypatch):
 
     repo.delete_symbol(a["id"], "FPT")
     assert "FPT" not in repo.watch_specs()
+
+
+import pandas as pd
+
+
+def test_orders_append_and_load_scoped_by_user(db, monkeypatch):
+    monkeypatch.setattr(config, "ALLOWED_EMAILS", {"a@x.com", "b@x.com"})
+    monkeypatch.setattr(config, "ADMIN_EMAILS", set())
+    a = repo.get_or_create_user("a@x.com", "A")
+    b = repo.get_or_create_user("b@x.com", "B")
+    rows = pd.DataFrame([
+        {"time": "2026-06-22T09:15:00", "volume": 5000, "price": 10.0, "match_type": "Mua"},
+        {"time": "2026-06-22T09:16:00", "volume": 8000, "price": 11.0, "match_type": "Bán"},
+    ])
+    assert repo.append_rows(a["id"], "VNM", rows) == 2
+    assert repo.append_rows(b["id"], "VNM", rows.head(1)) == 1
+
+    a_hist = repo.load_history(a["id"])
+    assert len(a_hist) == 2
+    assert len(repo.load_history(b["id"])) == 1
+
+    filtered = repo.load_history(a["id"], symbol_filter="VNM", date_filter="2026-06-22")
+    assert len(filtered) == 2
+    assert repo.distinct_symbols(a["id"]) == ["VNM"]
+
+    repo.clear_history(a["id"])
+    assert repo.load_history(a["id"]) == []
+    assert len(repo.load_history(b["id"])) == 1
