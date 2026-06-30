@@ -41,6 +41,9 @@ def run_cron():
     poller = Poller(notifier, fetch_fn, append_fn, chat_id_fn)
     # Pre-seed _first_poll so the baseline phase is skipped; fetch_fn already
     # filters by DB last_seen, so all returned rows are genuinely new.
+    # Intentionally leave poller._last_seen unpopulated: process_symbol's
+    # in-memory filter degenerates to a no-op (last_seen is None → new_ticks = ticks),
+    # which is correct because fetch_fn already applied the DB cursor.
     for symbol in specs:
         poller._first_poll.add(symbol)
 

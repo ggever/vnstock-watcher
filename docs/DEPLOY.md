@@ -76,6 +76,8 @@ Run the web app locally:
 IGNORE_MARKET_HOURS=1 DATABASE_URL=postgresql://... uvicorn app.web.main:app --reload
 ```
 
+> `IGNORE_MARKET_HOURS=1` bypasses the trading-hours gate so the poller runs outside market hours during development. Do not set this in production.
+
 ---
 
 ## 6. Worker (Fallback)
