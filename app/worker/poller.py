@@ -73,7 +73,7 @@ class Poller:
         self.append_fn(user_id, symbol, big)
         chat_id = self.chat_id_fn(user_id)
         if chat_id:
-            self.notifier.notify_big_order(chat_id, symbol, big)
+            self.notifier.notify_big_order(chat_id, symbol, big, spec["threshold"], spec["side"])
         self._last_notified[key] = now
         return True
 

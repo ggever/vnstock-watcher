@@ -14,7 +14,7 @@ def test_first_poll_is_baseline_then_fans_out():
     saved = []
 
     class FakeNotifier:
-        def notify_big_order(self, chat_id, symbol, rows):
+        def notify_big_order(self, chat_id, symbol, rows, threshold, side):
             sent.append((chat_id, symbol, len(rows)))
             return True
 
@@ -50,7 +50,7 @@ def test_cooldown_per_user_symbol():
     sent = []
 
     class FakeNotifier:
-        def notify_big_order(self, chat_id, symbol, rows):
+        def notify_big_order(self, chat_id, symbol, rows, threshold, side):
             sent.append(chat_id)
             return True
 

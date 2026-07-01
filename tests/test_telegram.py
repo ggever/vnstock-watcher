@@ -4,15 +4,22 @@ from app.notify.telegram import TelegramNotifier, build_message
 
 def _rows():
     return pd.DataFrame([
-        {"volume": 5000, "price": 10.0, "match_type": "Mua"},
-        {"volume": 3000, "price": 12.0, "match_type": "Bán"},
+        {"volume": 5000, "price": 10.0, "match_type": "Mua", "_sort_time": pd.Timestamp("2026-07-01 10:01:05")},
+        {"volume": 3000, "price": 12.0, "match_type": "Bán", "_sort_time": pd.Timestamp("2026-07-01 10:02:00")},
     ])
 
 
-def test_build_message_matches_legacy_format():
-    title, body = build_message("VNM", _rows())
-    assert title == "VNM: 2 lệnh lớn"
-    assert body == "Chiều Bán, Mua | KL 8,000 | GT 86,000"
+def test_build_message_format():
+    text = build_message("VNM", _rows(), threshold=2000, side="")
+    assert text.startswith("VNM:")
+    assert "2 lệnh Mua 🟢/Bán 🔴 >= Khối lượng 2,000" in text
+    assert "🟢 KL:5000 Giá: 10.00" in text
+    assert "🔴 KL:3000 Giá: 12.00" in text
+
+
+def test_build_message_single_side():
+    text = build_message("VNM", _rows(), threshold=1000, side="Mua")
+    assert "Mua 🟢 >= Khối lượng 1,000" in text
 
 
 def test_notify_big_order_posts_payload(monkeypatch):
@@ -28,16 +35,16 @@ def test_notify_big_order_posts_payload(monkeypatch):
 
     monkeypatch.setattr("app.notify.telegram.httpx.post", fake_post)
     n = TelegramNotifier(token="TOK")
-    ok = n.notify_big_order("999", "VNM", _rows())
+    ok = n.notify_big_order("999", "VNM", _rows(), threshold=2000, side="")
     assert ok is True
     assert captured["url"] == "https://api.telegram.org/botTOK/sendMessage"
     assert captured["json"]["chat_id"] == "999"
-    assert "VNM: 2 lệnh lớn" in captured["json"]["text"]
+    assert "VNM:" in captured["json"]["text"]
 
 
 def test_notify_big_order_skips_empty():
     n = TelegramNotifier(token="TOK")
-    assert n.notify_big_order("999", "VNM", pd.DataFrame()) is False
+    assert n.notify_big_order("999", "VNM", pd.DataFrame(), threshold=2000, side="") is False
 
 
 def test_notify_swallows_errors(monkeypatch):

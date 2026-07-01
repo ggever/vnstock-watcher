@@ -6,6 +6,7 @@ from pathlib import Path
 
 import psycopg
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 from app import config
 from app.core.market_hours import now_vn
@@ -16,8 +17,23 @@ def _dsn() -> str:
     return config.DATABASE_URL
 
 
-def connect() -> psycopg.Connection:
-    return psycopg.connect(_dsn(), row_factory=dict_row, autocommit=True)
+_pool: ConnectionPool | None = None
+
+
+def _get_pool() -> ConnectionPool:
+    global _pool
+    if _pool is None:
+        _pool = ConnectionPool(
+            _dsn(),
+            min_size=1,
+            max_size=5,
+            kwargs={"row_factory": dict_row, "autocommit": True},
+        )
+    return _pool
+
+
+def connect():
+    return _get_pool().connection()
 
 
 def _schema_sql() -> str:
