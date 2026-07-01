@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import os
 import pandas as pd
+
+os.environ.setdefault("HOME", "/tmp")
 
 
 def fetch_intraday(symbol: str, page_size: int = 100) -> pd.DataFrame:
