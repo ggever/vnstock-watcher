@@ -40,6 +40,12 @@ def normalize_ticks(frame) -> pd.DataFrame:
         today = pd.Timestamp.today().date().isoformat()
         ticks["_sort_time"] = pd.to_datetime(today + " " + ticks["time"].astype(str), errors="coerce")
 
+    # Strip timezone if present, then normalize to ns precision so comparisons
+    # with pd.Timestamp and Python datetime are always valid across pandas versions.
+    if ticks["_sort_time"].dt.tz is not None:
+        ticks["_sort_time"] = ticks["_sort_time"].dt.tz_convert(None)
+    ticks["_sort_time"] = ticks["_sort_time"].astype("datetime64[ns]")
+
     ticks = ticks.dropna(subset=["_sort_time"])
     return ticks.sort_values("_sort_time")
 
