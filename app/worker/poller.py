@@ -1,6 +1,7 @@
 # app/worker/poller.py
 from __future__ import annotations
 
+import traceback
 from datetime import datetime, timedelta
 from typing import Callable
 
@@ -59,7 +60,7 @@ class Poller:
             self._record_success(symbol)
         except Exception as exc:  # noqa: BLE001
             self._record_failure(symbol)
-            self.log(f"{symbol}: lỗi khi lấy dữ liệu - {exc}")
+            self.log(f"{symbol}: lỗi khi lấy dữ liệu - {exc}\n{traceback.format_exc()}")
 
     def _fan_out(self, symbol: str, spec: dict, new_ticks: pd.DataFrame, now: datetime) -> bool:
         big = filter_big_orders(new_ticks, spec["threshold"], spec["side"])
