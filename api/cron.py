@@ -29,7 +29,10 @@ def run_cron(request: Request):
         df = ticks.fetch_intraday(symbol, page_size)
         last_seen = repo.get_poller_last_seen(symbol)
         if last_seen is not None and not df.empty:
-            df = df[df["_sort_time"] > pd.Timestamp(last_seen)]
+            cutoff = pd.Timestamp(last_seen)
+            if cutoff.tzinfo is not None:
+                cutoff = cutoff.tz_convert(None)
+            df = df[df["_sort_time"] > cutoff]
         if not df.empty:
             fetched_max[symbol] = df["_sort_time"].max()
         return df
