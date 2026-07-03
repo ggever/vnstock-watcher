@@ -6,11 +6,39 @@ import pandas as pd
 os.environ.setdefault("HOME", "/tmp")
 
 
-def fetch_intraday(symbol: str, page_size: int = 100) -> pd.DataFrame:
-    from vnstock import Quote
-    quote = Quote(symbol=symbol, source="kbs")
-    frame = quote.intraday(page_size=page_size)
+_INTRADAY_SOURCES = ("vci", "kbs")
+
+
+def _fetch_from_source(symbol: str, source: str, page_size: int) -> pd.DataFrame:
+    if source == "vci":
+        # vnstock's top-level Quote dispatcher always injects a `page` kwarg,
+        # which the VCI provider's intraday() doesn't accept, so call it directly.
+        from vnstock.explorer.vci.quote import Quote
+
+        frame = Quote(symbol=symbol).intraday(page_size=page_size)
+    else:
+        from vnstock import Quote
+
+        frame = Quote(symbol=symbol, source=source).intraday(page_size=page_size)
     return normalize_ticks(frame)
+
+
+def fetch_intraday(symbol: str, page_size: int = 100) -> pd.DataFrame:
+    errors = []
+    for i, source in enumerate(_INTRADAY_SOURCES):
+        try:
+            ticks = _fetch_from_source(symbol, source, page_size)
+        except Exception as exc:
+            errors.append(f"{source}: {exc}")
+            continue
+        if ticks.empty:
+            errors.append(f"{source}: dữ liệu rỗng")
+            continue
+        if i > 0:
+            print(f"{symbol}: nguồn {_INTRADAY_SOURCES[0]} không có dữ liệu, dùng '{source}' thay thế.")
+        return ticks
+
+    raise ValueError(f"Không lấy được dữ liệu intraday cho mã {symbol} ({'; '.join(errors)})")
 
 
 def page_size_for_interval(interval: int) -> int:
